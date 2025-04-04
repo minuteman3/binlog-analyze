@@ -1,8 +1,8 @@
 # MySQL Binlog Analyzer
 
-[![Tests](https://github.com/miles/binlog-analyze/actions/workflows/tests.yml/badge.svg)](https://github.com/miles/binlog-analyze/actions/workflows/tests.yml)
-[![Code Coverage](https://github.com/miles/binlog-analyze/actions/workflows/coverage.yml/badge.svg)](https://github.com/miles/binlog-analyze/actions/workflows/coverage.yml)
-[![Lint](https://github.com/miles/binlog-analyze/actions/workflows/lint.yml/badge.svg)](https://github.com/miles/binlog-analyze/actions/workflows/lint.yml)
+[![Tests](https://github.com/minuteman3/binlog-analyze/actions/workflows/tests.yml/badge.svg)](https://github.com/minuteman3/binlog-analyze/actions/workflows/tests.yml)
+[![Code Coverage](https://github.com/minuteman3/binlog-analyze/actions/workflows/coverage.yml/badge.svg)](https://github.com/minuteman3/binlog-analyze/actions/workflows/coverage.yml)
+[![Lint](https://github.com/minuteman3/binlog-analyze/actions/workflows/lint.yml/badge.svg)](https://github.com/minuteman3/binlog-analyze/actions/workflows/lint.yml)
 
 A Go-based tool for analyzing MySQL binary logs and providing summary statistics.
 
@@ -22,7 +22,7 @@ A Go-based tool for analyzing MySQL binary logs and providing summary statistics
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/binlog-analyze.git
+git clone https://github.com/minuteman3/binlog-analyze.git
 cd binlog-analyze
 
 # Build the application
@@ -32,7 +32,7 @@ go build -o binlog-analyze ./cmd/binlog-analyze
 Or install directly with Go:
 
 ```bash
-go install github.com/miles/binlog-analyze/cmd/binlog-analyze@latest
+go install github.com/minuteman3/binlog-analyze/cmd/binlog-analyze@latest
 ```
 
 ## Usage
