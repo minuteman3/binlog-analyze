@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/miles/binlog-analyze/pkg/analyzer"
 	"github.com/miles/binlog-analyze/pkg/models"
@@ -19,6 +20,8 @@ func main() {
 	outputFile := flag.String("output", "", "Optional file to write output to")
 	minDuration := flag.Duration("min-duration", 0, "Only show transactions with at least this duration (e.g. 100ms, 1s, 500ms)")
 	topCount := flag.Int("top", 10, "Number of transactions to show in top lists (default: 10)")
+	detectClusters := flag.Bool("detect-clusters", false, "Detect clusters of transactions with similar end times (potential blocking events)")
+	clusterWindow := flag.Duration("cluster-window", time.Second, "Time window to consider transactions as part of the same cluster (default: 1s)")
 	flag.Parse()
 
 	// Check if at least one binlog file option is provided
@@ -96,6 +99,12 @@ func main() {
 	
 	// Set top transaction count
 	a.SetTopTransactionCount(*topCount)
+	
+	// Enable transaction cluster detection if requested
+	if *detectClusters {
+		a.EnableTransactionClusterDetection(true)
+		a.SetClusterTimeWindow(*clusterWindow)
+	}
 
 	// Generate output
 	var output string
@@ -131,18 +140,21 @@ func writeToFile(path, content string) error {
 
 // printUsage prints usage information
 func printUsage() {
-	fmt.Println("\nUsage: binlog-analyze [--file=<binlog-file> | --files=<comma-separated-binlog-files>] [--format=text|markdown] [--output=<output-file>] [--min-duration=<duration>] [--top=<count>]")
+	fmt.Println("\nUsage: binlog-analyze [--file=<binlog-file> | --files=<comma-separated-binlog-files>] [--format=text|markdown] [--output=<output-file>] [--min-duration=<duration>] [--top=<count>] [--detect-clusters] [--cluster-window=<duration>]")
 	fmt.Println("\nParameters:")
-	fmt.Println("  --file         Path to a single MySQL binlog file")
-	fmt.Println("  --files        Comma-separated list of MySQL binlog files to analyze and merge")
-	fmt.Println("  --format       Output format: text or markdown (default: text)")
-	fmt.Println("  --output       Optional file to write output to")
-	fmt.Println("  --min-duration Only show transactions with at least this duration (e.g. 100ms, 1s, 500ms)")
-	fmt.Println("  --top          Number of transactions to show in top lists (default: 10)")
+	fmt.Println("  --file           Path to a single MySQL binlog file")
+	fmt.Println("  --files          Comma-separated list of MySQL binlog files to analyze and merge")
+	fmt.Println("  --format         Output format: text or markdown (default: text)")
+	fmt.Println("  --output         Optional file to write output to")
+	fmt.Println("  --min-duration   Only show transactions with at least this duration (e.g. 100ms, 1s, 500ms)")
+	fmt.Println("  --top            Number of transactions to show in top lists (default: 10)")
+	fmt.Println("  --detect-clusters Detect clusters of transactions that end at similar times (potential blocking events)")
+	fmt.Println("  --cluster-window Time window to consider transactions as part of the same cluster (default: 1s)")
 	fmt.Println("\nExample:")
 	fmt.Println("  binlog-analyze --file=/var/lib/mysql/mysql-bin.000001")
 	fmt.Println("  binlog-analyze --files=/var/lib/mysql/mysql-bin.000001,/var/lib/mysql/mysql-bin.000002")
 	fmt.Println("  binlog-analyze --file=/var/lib/mysql/mysql-bin.000001 --format=markdown --output=report.md")
 	fmt.Println("  binlog-analyze --files=/var/lib/mysql/mysql-bin.000001,/var/lib/mysql/mysql-bin.000002 --min-duration=500ms")
 	fmt.Println("  binlog-analyze --file=/var/lib/mysql/mysql-bin.000001 --top=20 # Show top 20 transactions")
+	fmt.Println("  binlog-analyze --file=/var/lib/mysql/mysql-bin.000001 --detect-clusters --cluster-window=500ms")
 }

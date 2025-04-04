@@ -14,6 +14,7 @@ A Go-based tool for analyzing MySQL binary logs and providing summary statistics
 - Shows total number of rows changed
 - Tracks transaction sizes in bytes
 - Shows transaction start and end times
+- Detects clusters of transactions that end at similar times (potential blocking events)
 - Analyzes and merges multiple binlog files
 - Outputs results in plain text or markdown format
 
@@ -60,6 +61,12 @@ binlog-analyze --files=/path/to/mysql-bin.000001,/path/to/mysql-bin.000002 --min
 
 # Show top 20 transactions in each category (default is 10)
 binlog-analyze --file=/path/to/mysql-bin.000001 --top=20
+
+# Detect clusters of transactions that end at similar times (potential blocking events)
+binlog-analyze --file=/path/to/mysql-bin.000001 --detect-clusters
+
+# Customize the time window for cluster detection (default is 1s)
+binlog-analyze --file=/path/to/mysql-bin.000001 --detect-clusters --cluster-window=500ms
 ```
 
 ## Example Output
