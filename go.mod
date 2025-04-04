@@ -1,11 +1,12 @@
 module github.com/miles/binlog-analyze
 
-go 1.22.3
+go 1.22
+
+require github.com/go-mysql-org/go-mysql v1.12.0
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/go-mysql-org/go-mysql v1.12.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
