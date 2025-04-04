@@ -32,7 +32,7 @@ func main() {
 	}
 
 	var filesToProcess []string
-	
+
 	// Process single file
 	if *binlogFile != "" {
 		// Check if file exists
@@ -42,7 +42,7 @@ func main() {
 		}
 		filesToProcess = append(filesToProcess, *binlogFile)
 	}
-	
+
 	// Process multiple files
 	if *binlogFiles != "" {
 		fileList := strings.Split(*binlogFiles, ",")
@@ -51,7 +51,7 @@ func main() {
 			if file == "" {
 				continue
 			}
-			
+
 			// Check if file exists
 			if _, err := os.Stat(file); os.IsNotExist(err) {
 				fmt.Printf("Error: Binlog file '%s' does not exist\n", file)
@@ -60,15 +60,15 @@ func main() {
 			filesToProcess = append(filesToProcess, file)
 		}
 	}
-	
-	// Initialize an empty stats object 
+
+	// Initialize an empty stats object
 	var combinedStats *models.BinlogStats
-	
+
 	// Process each file and merge stats
 	for i, file := range filesToProcess {
 		// Initialize parser
 		p := parser.NewParser(file)
-		
+
 		// Parse binlog file
 		fmt.Printf("Analyzing binlog file (%d/%d): %s\n", i+1, len(filesToProcess), file)
 		stats, err := p.ParseBinlog()
@@ -76,7 +76,7 @@ func main() {
 			fmt.Printf("Error parsing binlog: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		if combinedStats == nil {
 			// For the first file, just use its stats
 			combinedStats = stats
@@ -85,21 +85,21 @@ func main() {
 			combinedStats.MergeWith(stats)
 		}
 	}
-	
+
 	// Use the combined stats for analysis
 	stats := combinedStats
 
 	// Initialize analyzer with filtering options
 	a := analyzer.NewAnalyzer(stats)
-	
+
 	// Set minimum transaction duration filter if provided
 	if *minDuration > 0 {
 		a.SetMinTransactionDuration(*minDuration)
 	}
-	
+
 	// Set top transaction count
 	a.SetTopTransactionCount(*topCount)
-	
+
 	// Enable transaction cluster detection if requested
 	if *detectClusters {
 		a.EnableTransactionClusterDetection(true)
