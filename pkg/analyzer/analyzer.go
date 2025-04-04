@@ -11,21 +11,31 @@ import (
 
 // Analyzer processes and formats binlog statistics
 type Analyzer struct {
-	stats              *models.BinlogStats
+	stats                  *models.BinlogStats
 	minTransactionDuration time.Duration
+	topTransactionCount    int // Number of transactions to show in top lists
 }
 
 // NewAnalyzer creates a new analyzer with statistics
 func NewAnalyzer(stats *models.BinlogStats) *Analyzer {
 	return &Analyzer{
-		stats: stats,
+		stats:                  stats,
 		minTransactionDuration: 0,
+		topTransactionCount:    10, // Default to showing top 10 transactions
 	}
 }
 
 // SetMinTransactionDuration sets the minimum duration filter for transactions
 func (a *Analyzer) SetMinTransactionDuration(duration time.Duration) {
 	a.minTransactionDuration = duration
+}
+
+// SetTopTransactionCount sets the number of transactions to show in top lists
+func (a *Analyzer) SetTopTransactionCount(count int) {
+	if count < 1 {
+		count = 1 // Ensure at least 1 transaction is shown
+	}
+	a.topTransactionCount = count
 }
 
 // PrintSummary outputs a summary of the binlog statistics
@@ -101,7 +111,7 @@ func (a *Analyzer) printTransactionStats() {
 		return
 	}
 
-	// --- TOP 10 BY DURATION ---
+	// --- TOP N BY DURATION ---
 	// Sort transactions by duration (longest first)
 	durationSorted := make([]*models.TransactionStats, len(filteredTxns))
 	copy(durationSorted, filteredTxns)
@@ -115,15 +125,15 @@ func (a *Analyzer) printTransactionStats() {
 		fmt.Printf("Showing transactions with duration >= %s\n", a.minTransactionDuration)
 	}
 	
-	fmt.Println("\nTop 10 longest transactions:")
+	fmt.Printf("\nTop %d longest transactions:\n", a.topTransactionCount)
 	
 	// Print header
 	fmt.Printf("%-20s | %-20s | %-20s | %-15s | %-10s | %-15s | %-10s | %s\n", 
 		"Transaction ID", "Start Time", "End Time", "Duration", "Rows Changed", "Bytes", "Tables", "Affected Tables")
 	fmt.Println(strings.Repeat("-", 160))
 	
-	// Limit to top 10 transactions
-	limit := 10
+	// Limit to top N transactions based on configuration
+	limit := a.topTransactionCount
 	if len(durationSorted) < limit {
 		limit = len(durationSorted)
 	}
@@ -150,7 +160,7 @@ func (a *Analyzer) printTransactionStats() {
 			strings.Join(tables, ", "))
 	}
 	
-	// --- TOP 10 BY ROWS TOUCHED ---
+	// --- TOP N BY ROWS TOUCHED ---
 	// Sort transactions by rows changed (highest first)
 	rowsSorted := make([]*models.TransactionStats, len(filteredTxns))
 	copy(rowsSorted, filteredTxns)
@@ -158,15 +168,15 @@ func (a *Analyzer) printTransactionStats() {
 		return rowsSorted[i].RowsChanged > rowsSorted[j].RowsChanged
 	})
 	
-	fmt.Println("\nTop 10 transactions by rows changed:")
+	fmt.Printf("\nTop %d transactions by rows changed:\n", a.topTransactionCount)
 	
 	// Print header
 	fmt.Printf("%-20s | %-20s | %-20s | %-15s | %-10s | %-15s | %-10s | %s\n", 
 		"Transaction ID", "Start Time", "End Time", "Duration", "Rows Changed", "Bytes", "Tables", "Affected Tables")
 	fmt.Println(strings.Repeat("-", 160))
 	
-	// Limit to top 10 transactions
-	limit = 10
+	// Limit to top N transactions based on configuration
+	limit = a.topTransactionCount
 	if len(rowsSorted) < limit {
 		limit = len(rowsSorted)
 	}
@@ -193,7 +203,7 @@ func (a *Analyzer) printTransactionStats() {
 			strings.Join(tables, ", "))
 	}
 	
-	// --- TOP 10 BY BYTES WRITTEN ---
+	// --- TOP N BY BYTES WRITTEN ---
 	// Sort transactions by byte size (largest first)
 	bytesSorted := make([]*models.TransactionStats, len(filteredTxns))
 	copy(bytesSorted, filteredTxns)
@@ -201,15 +211,15 @@ func (a *Analyzer) printTransactionStats() {
 		return bytesSorted[i].ByteSize > bytesSorted[j].ByteSize
 	})
 	
-	fmt.Println("\nTop 10 transactions by bytes written:")
+	fmt.Printf("\nTop %d transactions by bytes written:\n", a.topTransactionCount)
 	
 	// Print header
 	fmt.Printf("%-20s | %-20s | %-20s | %-15s | %-10s | %-15s | %-10s | %s\n", 
 		"Transaction ID", "Start Time", "End Time", "Duration", "Rows Changed", "Bytes", "Tables", "Affected Tables")
 	fmt.Println(strings.Repeat("-", 160))
 	
-	// Limit to top 10 transactions
-	limit = 10
+	// Limit to top N transactions based on configuration
+	limit = a.topTransactionCount
 	if len(bytesSorted) < limit {
 		limit = len(bytesSorted)
 	}
@@ -299,7 +309,7 @@ func (a *Analyzer) GetMarkdownReport() string {
 				sb.WriteString(fmt.Sprintf("Transactions with duration >= %s\n\n", a.minTransactionDuration))
 			}
 			
-			// --- TOP 10 BY DURATION ---
+			// --- TOP N BY DURATION ---
 			// Sort transactions by duration (longest first)
 			durationSorted := make([]*models.TransactionStats, len(filteredTxns))
 			copy(durationSorted, filteredTxns)
@@ -307,13 +317,13 @@ func (a *Analyzer) GetMarkdownReport() string {
 				return durationSorted[i].Duration > durationSorted[j].Duration
 			})
 			
-			sb.WriteString("### Top 10 longest transactions\n\n")
+			sb.WriteString(fmt.Sprintf("### Top %d longest transactions\n\n", a.topTransactionCount))
 			
 			sb.WriteString("| Transaction ID | Start Time | End Time | Duration | Rows Changed | Bytes | Tables | Affected Tables |\n")
 			sb.WriteString("|----------------|------------|----------|----------|--------------|-------|--------|----------------|\n")
 			
-			// Limit to top 10 transactions
-			limit := 10
+			// Limit to top N transactions based on configuration
+			limit := a.topTransactionCount
 			if len(durationSorted) < limit {
 				limit = len(durationSorted)
 			}
@@ -340,7 +350,7 @@ func (a *Analyzer) GetMarkdownReport() string {
 					strings.Join(tables, ", ")))
 			}
 			
-			// --- TOP 10 BY ROWS TOUCHED ---
+			// --- TOP N BY ROWS TOUCHED ---
 			// Sort transactions by rows changed (highest first)
 			rowsSorted := make([]*models.TransactionStats, len(filteredTxns))
 			copy(rowsSorted, filteredTxns)
@@ -348,13 +358,13 @@ func (a *Analyzer) GetMarkdownReport() string {
 				return rowsSorted[i].RowsChanged > rowsSorted[j].RowsChanged
 			})
 			
-			sb.WriteString("\n### Top 10 transactions by rows changed\n\n")
+			sb.WriteString(fmt.Sprintf("\n### Top %d transactions by rows changed\n\n", a.topTransactionCount))
 			
 			sb.WriteString("| Transaction ID | Start Time | End Time | Duration | Rows Changed | Bytes | Tables | Affected Tables |\n")
 			sb.WriteString("|----------------|------------|----------|----------|--------------|-------|--------|----------------|\n")
 			
-			// Limit to top 10 transactions
-			limit = 10
+			// Limit to top N transactions based on configuration
+			limit = a.topTransactionCount
 			if len(rowsSorted) < limit {
 				limit = len(rowsSorted)
 			}
@@ -381,7 +391,7 @@ func (a *Analyzer) GetMarkdownReport() string {
 					strings.Join(tables, ", ")))
 			}
 			
-			// --- TOP 10 BY BYTES WRITTEN ---
+			// --- TOP N BY BYTES WRITTEN ---
 			// Sort transactions by byte size (largest first)
 			bytesSorted := make([]*models.TransactionStats, len(filteredTxns))
 			copy(bytesSorted, filteredTxns)
@@ -389,13 +399,13 @@ func (a *Analyzer) GetMarkdownReport() string {
 				return bytesSorted[i].ByteSize > bytesSorted[j].ByteSize
 			})
 			
-			sb.WriteString("\n### Top 10 transactions by bytes written\n\n")
+			sb.WriteString(fmt.Sprintf("\n### Top %d transactions by bytes written\n\n", a.topTransactionCount))
 			
 			sb.WriteString("| Transaction ID | Start Time | End Time | Duration | Rows Changed | Bytes | Tables | Affected Tables |\n")
 			sb.WriteString("|----------------|------------|----------|----------|--------------|-------|--------|----------------|\n")
 			
-			// Limit to top 10 transactions
-			limit = 10
+			// Limit to top N transactions based on configuration
+			limit = a.topTransactionCount
 			if len(bytesSorted) < limit {
 				limit = len(bytesSorted)
 			}

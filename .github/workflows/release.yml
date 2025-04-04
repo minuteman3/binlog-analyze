@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.19'
+        cache: true
+
+    - name: Get dependencies
+      run: go mod download
+
+    - name: Run tests
+      run: go test -v ./...
+
+    - name: Build binaries
+      run: |
+        go build -o binlog-analyze-linux-amd64 ./cmd/binlog-analyze
+        GOOS=darwin GOARCH=amd64 go build -o binlog-analyze-darwin-amd64 ./cmd/binlog-analyze
+        GOOS=darwin GOARCH=arm64 go build -o binlog-analyze-darwin-arm64 ./cmd/binlog-analyze
+        GOOS=windows GOARCH=amd64 go build -o binlog-analyze-windows-amd64.exe ./cmd/binlog-analyze
+
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          binlog-analyze-linux-amd64
+          binlog-analyze-darwin-amd64
+          binlog-analyze-darwin-arm64
+          binlog-analyze-windows-amd64.exe
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -18,6 +18,7 @@ func main() {
 	outputFormat := flag.String("format", "text", "Output format: text or markdown")
 	outputFile := flag.String("output", "", "Optional file to write output to")
 	minDuration := flag.Duration("min-duration", 0, "Only show transactions with at least this duration (e.g. 100ms, 1s, 500ms)")
+	topCount := flag.Int("top", 10, "Number of transactions to show in top lists (default: 10)")
 	flag.Parse()
 
 	// Check if at least one binlog file option is provided
@@ -92,6 +93,9 @@ func main() {
 	if *minDuration > 0 {
 		a.SetMinTransactionDuration(*minDuration)
 	}
+	
+	// Set top transaction count
+	a.SetTopTransactionCount(*topCount)
 
 	// Generate output
 	var output string
@@ -127,16 +131,18 @@ func writeToFile(path, content string) error {
 
 // printUsage prints usage information
 func printUsage() {
-	fmt.Println("\nUsage: binlog-analyze [--file=<binlog-file> | --files=<comma-separated-binlog-files>] [--format=text|markdown] [--output=<output-file>] [--min-duration=<duration>]")
+	fmt.Println("\nUsage: binlog-analyze [--file=<binlog-file> | --files=<comma-separated-binlog-files>] [--format=text|markdown] [--output=<output-file>] [--min-duration=<duration>] [--top=<count>]")
 	fmt.Println("\nParameters:")
 	fmt.Println("  --file         Path to a single MySQL binlog file")
 	fmt.Println("  --files        Comma-separated list of MySQL binlog files to analyze and merge")
 	fmt.Println("  --format       Output format: text or markdown (default: text)")
 	fmt.Println("  --output       Optional file to write output to")
 	fmt.Println("  --min-duration Only show transactions with at least this duration (e.g. 100ms, 1s, 500ms)")
+	fmt.Println("  --top          Number of transactions to show in top lists (default: 10)")
 	fmt.Println("\nExample:")
 	fmt.Println("  binlog-analyze --file=/var/lib/mysql/mysql-bin.000001")
 	fmt.Println("  binlog-analyze --files=/var/lib/mysql/mysql-bin.000001,/var/lib/mysql/mysql-bin.000002")
 	fmt.Println("  binlog-analyze --file=/var/lib/mysql/mysql-bin.000001 --format=markdown --output=report.md")
 	fmt.Println("  binlog-analyze --files=/var/lib/mysql/mysql-bin.000001,/var/lib/mysql/mysql-bin.000002 --min-duration=500ms")
+	fmt.Println("  binlog-analyze --file=/var/lib/mysql/mysql-bin.000001 --top=20 # Show top 20 transactions")
 }

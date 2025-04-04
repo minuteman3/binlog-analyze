@@ -1,5 +1,9 @@
 # MySQL Binlog Analyzer
 
+[![Tests](https://github.com/miles/binlog-analyze/actions/workflows/tests.yml/badge.svg)](https://github.com/miles/binlog-analyze/actions/workflows/tests.yml)
+[![Code Coverage](https://github.com/miles/binlog-analyze/actions/workflows/coverage.yml/badge.svg)](https://github.com/miles/binlog-analyze/actions/workflows/coverage.yml)
+[![Lint](https://github.com/miles/binlog-analyze/actions/workflows/lint.yml/badge.svg)](https://github.com/miles/binlog-analyze/actions/workflows/lint.yml)
+
 A Go-based tool for analyzing MySQL binary logs and providing summary statistics.
 
 ## Features
@@ -9,6 +13,7 @@ A Go-based tool for analyzing MySQL binary logs and providing summary statistics
 - Counts inserts, updates, and deletes per table
 - Shows total number of rows changed
 - Tracks transaction sizes in bytes
+- Shows transaction start and end times
 - Analyzes and merges multiple binlog files
 - Outputs results in plain text or markdown format
 
@@ -52,6 +57,9 @@ binlog-analyze --file=/path/to/mysql-bin.000001 --min-duration=500ms
 
 # Analyze multiple files and filter by duration
 binlog-analyze --files=/path/to/mysql-bin.000001,/path/to/mysql-bin.000002 --min-duration=1s
+
+# Show top 20 transactions in each category (default is 10)
+binlog-analyze --file=/path/to/mysql-bin.000001 --top=20
 ```
 
 ## Example Output
@@ -76,10 +84,10 @@ orders                          | 600         | 200         | 5           | 805
 
 === Transaction Statistics ===
 Showing top 10 longest transactions:
-Transaction ID         | Duration        | Rows Changed | Bytes           | Tables     | Affected Tables
-------------------------------------------------------------------------------------------------------------------------
-54321                  | 2.458s          | 342          | 1.25 MB         | 2          | users, orders
-12345                  | 1.876s          | 215          | 850.32 KB       | 3          | users, products, orders
+Transaction ID         | Start Time           | End Time             | Duration        | Rows Changed | Bytes           | Tables     | Affected Tables
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+54321                  | 2025-04-04 10:15:30 | 2025-04-04 10:15:33 | 2.458s          | 342          | 1.25 MB         | 2          | users, orders
+12345                  | 2025-04-04 10:20:15 | 2025-04-04 10:20:17 | 1.876s          | 215          | 850.32 KB       | 3          | users, products, orders
 ```
 
 ### Markdown Format
@@ -113,10 +121,10 @@ A sample of the markdown output:
 
 Top 10 longest transactions:
 
-| Transaction ID | Duration | Rows Changed | Bytes | Tables | Affected Tables |
-|----------------|----------|--------------|-------|--------|----------------|
-| 54321 | 2.458s | 342 | 1.25 MB | 2 | users, orders |
-| 12345 | 1.876s | 215 | 850.32 KB | 3 | users, products, orders |
+| Transaction ID | Start Time | End Time | Duration | Rows Changed | Bytes | Tables | Affected Tables |
+|----------------|-----------|---------|----------|--------------|-------|--------|----------------|
+| 54321 | 2025-04-04 10:15:30 | 2025-04-04 10:15:33 | 2.458s | 342 | 1.25 MB | 2 | users, orders |
+| 12345 | 2025-04-04 10:20:15 | 2025-04-04 10:20:17 | 1.876s | 215 | 850.32 KB | 3 | users, products, orders |
 ```
 
 ## Requirements
